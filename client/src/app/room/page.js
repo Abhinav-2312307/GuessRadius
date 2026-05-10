@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { io } from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,7 +8,7 @@ import { Users, Send, Crown, Info, X, Trophy } from 'lucide-react';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
-export default function RoomPage() {
+function RoomContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -411,5 +411,13 @@ function GuessList({ guesses }) {
         ))}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function RoomPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="title">Loading...</div></div>}>
+      <RoomContent />
+    </Suspense>
   );
 }
