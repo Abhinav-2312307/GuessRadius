@@ -30,6 +30,14 @@ function RoomContent() {
   const [showTopWords, setShowTopWords] = useState(false);
   const [topWordsList, setTopWordsList] = useState([]);
 
+  // Prevent activeTab from going out of bounds if a player leaves
+  useEffect(() => {
+    const otherCount = players.length > 0 ? players.filter(p => p.id !== socket?.id).length : 0;
+    if (otherCount > 0 && activeTab >= otherCount) {
+      setActiveTab(0);
+    }
+  }, [players, activeTab, socket?.id]);
+
   // Initialize Socket
   useEffect(() => {
     const action = searchParams.get('action');
@@ -165,13 +173,6 @@ function RoomContent() {
   const me = players.find(p => p.id === myId);
   const hasWonActiveTab = me && otherPlayers.length > 0 && me.guesses.some(g => g.targetPlayerId === otherPlayers[activeTab]?.id && g.rank === 1);
 
-  // Prevent activeTab from going out of bounds if a player leaves
-  useEffect(() => {
-    if (otherPlayers.length > 0 && activeTab >= otherPlayers.length) {
-      setActiveTab(0);
-    }
-  }, [otherPlayers.length, activeTab]);
-
   return (
     <main style={{ minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       
@@ -301,7 +302,7 @@ function RoomContent() {
                <div style={{ padding: '1.5rem', flex: 1, overflowY: 'auto', maxHeight: '500px' }}>
                   {otherPlayers.length > 0 && me ? (
                      <GuessList 
-                        guesses={me.guesses.filter(g => g.targetPlayerId === otherPlayers[activeTab].id)} 
+                        guesses={me.guesses.filter(g => g.targetPlayerId === otherPlayers[activeTab]?.id)} 
                      />
                   ) : (
                     <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>No other players to guess.</p>
