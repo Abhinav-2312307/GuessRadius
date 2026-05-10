@@ -16,3 +16,8 @@ server/node_modules/
 # OS files
 .DS_Store
 *.pem
+
+# Data files
+glove.zip
+glove.6B.*
+server/data/glove.zip
