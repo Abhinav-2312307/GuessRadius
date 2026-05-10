@@ -17,6 +17,8 @@ function RoomContent() {
   const [players, setPlayers] = useState([]);
   const [status, setStatus] = useState('connecting'); // connecting, lobby, playing
   const [error, setError] = useState('');
+  const [guessError, setGuessError] = useState('');
+  const [targetWordError, setTargetWordError] = useState('');
   
   const [targetWordInput, setTargetWordInput] = useState('');
   const [myTargetWord, setMyTargetWord] = useState(null);
@@ -85,9 +87,11 @@ function RoomContent() {
     socket.emit('setTargetWord', { roomId, word: targetWordInput }, (response) => {
       setIsSubmitting(false);
       if (response.error) {
-        alert(response.error);
+        setTargetWordError(response.error);
+        setTimeout(() => setTargetWordError(''), 3000);
       } else {
         setMyTargetWord(response.word);
+        setTargetWordError('');
       }
     });
   };
@@ -106,7 +110,8 @@ function RoomContent() {
       );
       
       if (alreadyGuessed) {
-        alert("You have already guessed this word!");
+        setGuessError("You have already guessed this word!");
+        setTimeout(() => setGuessError(''), 3000);
         setGuessInput('');
         return;
       }
@@ -116,7 +121,10 @@ function RoomContent() {
     socket.emit('guessWord', { roomId, word: guessInput }, (response) => {
       setIsSubmitting(false);
       if (response.error) {
-        alert(response.error);
+        setGuessError(response.error);
+        setTimeout(() => setGuessError(''), 3000);
+      } else {
+        setGuessError('');
       }
       setGuessInput('');
     });
@@ -155,7 +163,14 @@ function RoomContent() {
   const myId = socket?.id;
   const otherPlayers = players.filter(p => p.id !== myId);
   const me = players.find(p => p.id === myId);
-  const hasWonActiveTab = me && otherPlayers.length > 0 && me.guesses.some(g => g.targetPlayerId === otherPlayers[activeTab].id && g.rank === 1);
+  const hasWonActiveTab = me && otherPlayers.length > 0 && me.guesses.some(g => g.targetPlayerId === otherPlayers[activeTab]?.id && g.rank === 1);
+
+  // Prevent activeTab from going out of bounds if a player leaves
+  useEffect(() => {
+    if (otherPlayers.length > 0 && activeTab >= otherPlayers.length) {
+      setActiveTab(0);
+    }
+  }, [otherPlayers.length, activeTab]);
 
   return (
     <main style={{ minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -212,6 +227,7 @@ function RoomContent() {
               <button type="submit" className="btn-primary" disabled={isSubmitting || !targetWordInput}>
                 Set Word
               </button>
+              {targetWordError && <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} style={{ color: 'var(--error)', margin: 0, fontSize: '0.9rem' }}>{targetWordError}</motion.p>}
             </form>
           ) : (
             <div>
@@ -229,6 +245,7 @@ function RoomContent() {
           <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div className="glass-panel" style={{ padding: '1.5rem' }}>
                {!hasWonActiveTab ? (
+                 <>
                  <form onSubmit={handleGuess} style={{ display: 'flex', gap: '1rem' }}>
                    <input 
                       type="text"
@@ -242,6 +259,8 @@ function RoomContent() {
                      <Send size={18} /> Guess
                    </button>
                  </form>
+                 {guessError && <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} style={{ color: 'var(--error)', marginTop: '0.75rem', fontSize: '0.9rem' }}>{guessError}</motion.p>}
+                 </>
                ) : (
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                    <p style={{ color: 'var(--success)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
