@@ -6,7 +6,7 @@ import { io } from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Send, Crown, Info, X, Trophy } from 'lucide-react';
 
-const SOCKET_URL = 'http://localhost:3001';
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
 export default function RoomPage() {
   const searchParams = useSearchParams();

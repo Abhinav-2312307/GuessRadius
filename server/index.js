@@ -7,6 +7,20 @@ const nlp = require('./nlp');
 const app = express();
 app.use(cors());
 
+// Keep-awake ping route
+app.get('/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
+// Self-ping interval (10 minutes) to prevent Render free tier from sleeping
+setInterval(() => {
+  const url = process.env.RENDER_EXTERNAL_URL;
+  if (url) {
+    console.log(`Pinging self to keep awake: ${url}`);
+    fetch(`${url}/ping`).catch(err => console.error('Keep-alive ping failed:', err.message));
+  }
+}, 10 * 60 * 1000);
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
