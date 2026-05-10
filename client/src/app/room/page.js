@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { io } from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Send, Crown, Info } from 'lucide-react';
+import { Users, Send, Crown, Info, X, Trophy } from 'lucide-react';
 
 const SOCKET_URL = 'http://localhost:3001';
 
@@ -24,6 +24,9 @@ export default function RoomPage() {
   const [guessInput, setGuessInput] = useState('');
   const [activeTab, setActiveTab] = useState(0); // Which player's list we are viewing
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [showTopWords, setShowTopWords] = useState(false);
+  const [topWordsList, setTopWordsList] = useState([]);
 
   // Initialize Socket
   useEffect(() => {
@@ -119,6 +122,16 @@ export default function RoomPage() {
     });
   };
 
+  const handleViewTopWords = () => {
+    if (!socket || otherPlayers.length === 0) return;
+    socket.emit('getTopWords', { roomId, targetPlayerId: otherPlayers[activeTab].id }, (res) => {
+      if (res.topWords) {
+        setTopWordsList(res.topWords);
+        setShowTopWords(true);
+      }
+    });
+  };
+
   if (error) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -142,6 +155,7 @@ export default function RoomPage() {
   const myId = socket?.id;
   const otherPlayers = players.filter(p => p.id !== myId);
   const me = players.find(p => p.id === myId);
+  const hasWonActiveTab = me && otherPlayers.length > 0 && me.guesses.some(g => g.targetPlayerId === otherPlayers[activeTab].id && g.rank === 1);
 
   return (
     <main style={{ minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -214,19 +228,30 @@ export default function RoomPage() {
           {/* Guessing Area */}
           <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div className="glass-panel" style={{ padding: '1.5rem' }}>
-               <form onSubmit={handleGuess} style={{ display: 'flex', gap: '1rem' }}>
-                 <input 
-                    type="text"
-                    className="input-field"
-                    placeholder="Type a word to guess..."
-                    value={guessInput}
-                    onChange={e => setGuessInput(e.target.value)}
-                    autoFocus
-                 />
-                 <button type="submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} disabled={isSubmitting || !guessInput}>
-                   <Send size={18} /> Guess
-                 </button>
-               </form>
+               {!hasWonActiveTab ? (
+                 <form onSubmit={handleGuess} style={{ display: 'flex', gap: '1rem' }}>
+                   <input 
+                      type="text"
+                      className="input-field"
+                      placeholder="Type a word to guess..."
+                      value={guessInput}
+                      onChange={e => setGuessInput(e.target.value)}
+                      autoFocus
+                   />
+                   <button type="submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} disabled={isSubmitting || !guessInput}>
+                     <Send size={18} /> Guess
+                   </button>
+                 </form>
+               ) : (
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <p style={{ color: 'var(--success)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                     <Trophy size={20} /> You found the word!
+                   </p>
+                   <button onClick={handleViewTopWords} className="btn-primary" style={{ background: 'var(--surface-hover)' }}>
+                     View Top 1000 Words
+                   </button>
+                 </div>
+               )}
             </div>
 
             {/* Tabs for other players */}
@@ -287,6 +312,34 @@ export default function RoomPage() {
           </div>
         </motion.div>
       )}
+
+      {/* Top 1000 Words Modal */}
+      <AnimatePresence>
+        {showTopWords && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '2rem' }}
+          >
+            <motion.div 
+              initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
+              className="glass-panel" style={{ width: '100%', maxWidth: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', background: 'var(--background)' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1rem', borderBottom: '1px solid var(--border)' }}>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Crown color="var(--accent)" /> Top 1000 Closest Words</h2>
+                <button onClick={() => setShowTopWords(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}><X size={24} /></button>
+              </div>
+              <div style={{ overflowY: 'auto', padding: '1rem 0', flex: 1 }}>
+                {topWordsList.map((w, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontWeight: i === 0 ? 'bold' : 'normal', color: i === 0 ? 'var(--success)' : 'inherit', textTransform: 'capitalize' }}>{w.word}</span>
+                    <span style={{ fontFamily: 'monospace', color: 'var(--text-secondary)' }}>{w.rank}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </main>
   );

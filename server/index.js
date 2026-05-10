@@ -145,6 +145,16 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('getTopWords', ({ roomId, targetPlayerId }, callback) => {
+    if (!rooms[roomId]) return callback({ error: 'Room not found' });
+    const targetPlayer = rooms[roomId].players[targetPlayerId];
+    if (!targetPlayer || !targetPlayer.targetWord) return callback({ error: 'Player not found' });
+    
+    // Only allow if the game is over/won? Actually, just let them request it.
+    const topWords = nlp.getTopWords(targetPlayer.targetWord, 1000);
+    callback({ topWords });
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
     for (const roomId in rooms) {

@@ -95,15 +95,24 @@ class NLPEngine {
     const similarity = cos_sim(guessEmb, targetEmb);
 
     // Find insertion index in sorted list
-    let approxRank = 1;
+    list.push({ word: guessWord, similarity });
+    list.sort((a, b) => b.similarity - a.similarity);
+
+    // Rebuild rankings for the shifted items (for simplicity, rebuild all)
+    // In V8, iterating 5000 items takes < 1ms
     for (let i = 0; i < list.length; i++) {
-      if (similarity > list[i].similarity) {
-        break;
-      }
-      approxRank++;
+      rankings[list[i].word] = i + 1;
     }
     
-    return approxRank;
+    return rankings[guessWord];
+  }
+
+  getTopWords(targetWord, count = 1000) {
+    if (!this.targetRankings[targetWord]) return [];
+    return this.targetRankings[targetWord].list.slice(0, count).map((item, index) => ({
+      word: item.word,
+      rank: index + 1
+    }));
   }
 }
 
