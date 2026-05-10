@@ -32,16 +32,16 @@ GuessRadius is divided into two distinct services:
 
 ```mermaid
 graph TD
-    Client1[Player 1 (Next.js Client)] <-->|WebSocket| SocketGateway[Socket.io Gateway]
-    Client2[Player 2 (Next.js Client)] <-->|WebSocket| SocketGateway
+    Client1["Player 1 (Next.js Client)"] <-->|"WebSocket"| SocketGateway["Socket.io Gateway"]
+    Client2["Player 2 (Next.js Client)"] <-->|"WebSocket"| SocketGateway
     
     subgraph Express Backend Server
-        SocketGateway <--> GameManager[Room & Game State Manager]
-        GameManager <--> NLPEngine[NLP Similarity Engine]
-        NLPEngine <--> Dictionary[(275k English Words)]
-        NLPEngine <--> TransformersJS[Hugging Face Transformers.js]
-        TransformersJS <--> MiniLM[all-MiniLM-L6-v2 Model]
-        NLPEngine <--> Top10kList[(Top 10k Vocab Array)]
+        SocketGateway <--> GameManager["Room & Game State Manager"]
+        GameManager <--> NLPEngine["NLP Similarity Engine"]
+        NLPEngine <--> Dictionary[("275k English Words")]
+        NLPEngine <--> TransformersJS["Hugging Face Transformers.js"]
+        TransformersJS <--> MiniLM["all-MiniLM-L6-v2 Model"]
+        NLPEngine <--> Top10kList[("Top 10k Vocab Array")]
     end
 ```
 
