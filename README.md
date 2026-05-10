@@ -85,7 +85,7 @@ flowchart TD
     H --> I[Retrieve Precalculated Target Word Data]
     I --> J{Is Guess in Top 10k List?}
     
-    J -- Yes --> K[Return exact precalculated rank O(1)]
+    J -- Yes --> K["Return exact precalculated rank O(1)"]
     J -- No --> L[Calculate Cosine Similarity on the fly]
     L --> M[Binary search / Insert into sorted 10k list to find approx rank]
     
@@ -118,26 +118,26 @@ To give players immediate visual feedback on how close they are to the target wo
 - npm or yarn
 
 ### 1. Clone the Repository
-\`\`\`bash
+```bash
 git clone https://github.com/Abhinav-2312307/GuessRadius.git
 cd GuessRadius
-\`\`\`
+```
 
 ### 2. Backend Setup
-\`\`\`bash
+```bash
 cd server
 npm install
 node index.js
-\`\`\`
+```
 *(Note: On the very first run, the server will download the ~20MB transformer model into cache. It will also load the dictionary and pre-calculate core vocabulary. Please wait for "NLP Engine Initialized" in the console.)*
 
 ### 3. Frontend Setup
 Open a new terminal window:
-\`\`\`bash
+```bash
 cd client
 npm install
 npm run dev
-\`\`\`
+```
 
 The client will be available at [http://localhost:3000](http://localhost:3000).
 
@@ -145,7 +145,7 @@ The client will be available at [http://localhost:3000](http://localhost:3000).
 
 ## 📂 Project Structure
 
-\`\`\`text
+```text
 GuessRadius/
 ├── client/                     # Next.js Frontend
 │   ├── src/app/
@@ -161,7 +161,7 @@ GuessRadius/
     ├── data/
     │   └── 10k.txt             # Top 10,000 English Words vocabulary
     └── package.json
-\`\`\`
+```
 
 ---
 
